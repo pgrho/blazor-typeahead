@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "name": "asp.net",
+  "name": "shipwreck.blazor-typeahead",
   "private": true,
   "devDependencies": {
-    "del": "2.2.0",
-    "gulp": "3.9.0",
+    "del": "5.1.0",
+    "gulp": "4.0.2",
     "gulp-concat": "2.6.1",
     "gulp-uglify": "^3.0.1",
     "typescript": "3.5.3",
