@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace Shipwreck.BlazorTypeahead
 {
-    public class TypeaheadProxy<T> : ITypeaheadProxy
+    public class TypeaheadProxy<T> : ITypeaheadProxy, IDisposable
     {
         private class ItemCache
         {
@@ -164,5 +164,35 @@ namespace Shipwreck.BlazorTypeahead
               => _Runtime.InvokeVoidAsync("Shipwreck.BlazorTypeahead.update", _Element, text, focus, selectionStart, selectionEnd);
 
         #endregion UpdateElementAsync
+
+        #region IDisposable
+
+        protected bool IsDisposed { get; set; }
+
+        protected virtual async void Dispose(bool disposing)
+        {
+            if (!IsDisposed)
+            {
+                IsDisposed = true;
+                try
+                {
+                    await DestroyAsync().ConfigureAwait(false);
+                }
+                catch { }
+            }
+        }
+
+        ~TypeaheadProxy()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion IDisposable
     }
 }
