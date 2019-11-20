@@ -13,8 +13,4 @@ gulp.task('bootstrap', function () {
     return gulp.src(['node_modules/bootstrap/dist/**/*'])
         .pipe(gulp.dest('wwwroot'));
 });
-gulp.task('typeahead', function () {
-    return gulp.src(['node_modules/bootstrap-3-typeahead/bootstrap3-typeahead.*'])
-        .pipe(gulp.dest('wwwroot/js'));
-});
-gulp.task('default', gulp.series(['clean', 'jquery', 'bootstrap', 'typeahead']));
+gulp.task('default', gulp.series(['clean', 'jquery', 'bootstrap']));

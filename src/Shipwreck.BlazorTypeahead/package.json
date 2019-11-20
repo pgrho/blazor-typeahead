@@ -8,6 +8,7 @@
     "gulp-concat": "2.6.1",
     "gulp-uglify": "^3.0.1",
     "typescript": "3.5.3",
-    "gulp-typescript": "5.0.1"
+    "gulp-typescript": "5.0.1",
+    "bootstrap-3-typeahead": "4.0.2"
   }
 }
