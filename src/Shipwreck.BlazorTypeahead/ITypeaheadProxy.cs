@@ -2,5 +2,6 @@
 {
     internal interface ITypeaheadProxy
     {
+        void AfterSelect(int itemHashCode);
     }
 }

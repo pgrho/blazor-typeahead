@@ -43,16 +43,20 @@
             Source = State.All,
             Highlighter = (s, q) => $"<span class='text-light bg-dark mr-2'>{s.Postal}</span>{s.Name}",
             DisplayText = s => s.Name,
+            AfterSelect = (s) => _Proxy.UpdateElementAsync(text: s.Name + " (AfterSelect)", selectionStart: 0, selectionEnd: int.MaxValue),
         };
 
         _Proxy = await JS.TypeaheadAsync(element, ops);
         await _Proxy.FocusAsync();
+
+        StateHasChanged();
     }
 
     void Destroy()
     {
         _Proxy?.DestroyAsync();
         _Proxy = null;
+        StateHasChanged();
     }
 
     public class State

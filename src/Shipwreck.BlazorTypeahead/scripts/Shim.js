@@ -1,3 +1,4 @@
+/// <reference path="../node_modules/@dotnet/jsinterop/dist/Microsoft.JSInterop.d.ts" />
 var Shipwreck;
 (function (Shipwreck) {
     var BlazorTypeahead;
@@ -14,6 +15,9 @@ var Shipwreck;
                 highlighter: function (text, item) {
                     return item.name;
                 },
+                afterSelect: function (item) {
+                    DotNet.invokeMethodAsync("Shipwreck.BlazorTypeahead", "OnItemSelected", hashCode, item.hashCode);
+                },
                 autoSelect: options.autoSelect,
                 delay: options.delay,
                 fitToElement: options.fitToElement,
@@ -23,7 +27,6 @@ var Shipwreck;
                 selectOnBlur: options.selectOnBlur,
                 showCategoryHeader: options.showCategoryHeader
             };
-            console.dir(options);
             if (options.source) {
                 ops.source = options.source;
             }

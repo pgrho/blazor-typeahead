@@ -11,6 +11,18 @@ namespace Shipwreck.BlazorTypeahead
 {
     public class TypeaheadProxy<T> : ITypeaheadProxy, IDisposable
     {
+        private class ItemList
+        {
+            public ItemList(ItemCache[] items)
+            {
+                Items = items;
+                Timestamp = DateTime.Now;
+            }
+
+            public DateTime Timestamp { get; }
+            public ItemCache[] Items { get; }
+        }
+
         private class ItemCache
         {
             [JsonProperty("name")]
@@ -25,6 +37,9 @@ namespace Shipwreck.BlazorTypeahead
 
         private readonly IJSRuntime _Runtime;
         private readonly ElementReference _Element;
+
+        private readonly List<ItemList> _History;
+        private readonly int _MaximumHistory;
 
         #region Options
 
@@ -71,6 +86,9 @@ namespace Shipwreck.BlazorTypeahead
             _OpenLinkInNewTab = options.OpenLinkInNewTab;
             _SelectOnBlur = options.SelectOnBlur;
             _ShowCategoryHeader = options.ShowCategoryHeader;
+
+            _History = new List<ItemList>();
+            _MaximumHistory = 16;
         }
 
         public ValueTask InitializeAsync()
@@ -83,11 +101,7 @@ namespace Shipwreck.BlazorTypeahead
                 GetHashCode(),
                 JsonConvert.SerializeObject(new
                 {
-                    source = _Source?.Select(e => new ItemCache
-                    {
-                        Html = ToHtml(e, null),
-                        Value = e
-                    }),
+                    source = CacheItems(_Source),
                     sourceCallback = _SourceCallback != null,
                     items = _Items,
                     minLength = _MinLength,
@@ -108,6 +122,36 @@ namespace Shipwreck.BlazorTypeahead
                 }));
         }
 
+        #region Items
+
+        private ItemCache[] CacheItems(IEnumerable<T> items)
+        {
+            if (items == null)
+            {
+                return null;
+            }
+            var vs = items.Select(e => new ItemCache
+            {
+                Html = ToHtml(e, null),
+                Value = e
+            }).ToArray();
+
+            if (vs.Length != 0)
+            {
+                lock (_History)
+                {
+                    var dc = _History.Count - _MaximumHistory + 1;
+                    if (dc > 0)
+                    {
+                        _History.RemoveRange(0, dc);
+                    }
+
+                    _History.Add(new ItemList(vs));
+                }
+            }
+            return vs;
+        }
+
         private string ToHtml(T item, string query)
         {
             if (_Highlighter != null)
@@ -116,7 +160,7 @@ namespace Shipwreck.BlazorTypeahead
             }
             else
             {
-                var text = _DisplayText?.Invoke(item) ?? item?.ToString() ?? string.Empty;
+                var text = GetItemText(item);
 
                 return Regex.Replace(text, "[<>&]", m =>
                 {
@@ -136,6 +180,43 @@ namespace Shipwreck.BlazorTypeahead
                 });
             }
         }
+
+        public string GetItemText(T item) => _DisplayText?.Invoke(item) ?? item?.ToString() ?? string.Empty;
+
+        void ITypeaheadProxy.AfterSelect(int itemHashCode)
+        {
+            ItemCache selected = null;
+            lock (_History)
+            {
+                for (var i = _History.Count - 1; i >= 0; i--)
+                {
+                    var l = _History[i];
+                    foreach (var e in l.Items)
+                    {
+                        if (e.HashCode == itemHashCode)
+                        {
+                            selected = e;
+                            i = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (selected != null)
+            {
+                if (_AfterSelect != null)
+                {
+                    _AfterSelect(selected.Value);
+                }
+                else
+                {
+                    UpdateElementAsync(text: GetItemText(selected.Value), selectionStart: int.MaxValue, selectionEnd: int.MaxValue);
+                }
+            }
+        }
+
+        #endregion Items
 
         public ValueTask DestroyAsync()
         {

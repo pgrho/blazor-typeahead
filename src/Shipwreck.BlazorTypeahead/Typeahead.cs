@@ -32,5 +32,20 @@ namespace Shipwreck.BlazorTypeahead
             await proxy.InitializeAsync().ConfigureAwait(false);
             return proxy;
         }
+
+        [JSInvokable]
+        public static void OnItemSelected(int proxyHashCode, int itemHashCode)
+        {
+            ITypeaheadProxy proxy;
+            lock (_Proxies)
+            {
+                if (!_Proxies.TryGetValue(proxyHashCode, out proxy))
+                {
+                    return;
+                }
+            }
+
+            proxy?.AfterSelect(itemHashCode);
+        }
     }
 }
