@@ -46,6 +46,7 @@
         };
 
         _Proxy = await JS.TypeaheadAsync(element, ops);
+        await _Proxy.FocusAsync();
     }
 
     void Destroy()

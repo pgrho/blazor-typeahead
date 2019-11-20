@@ -37,5 +37,20 @@ var Shipwreck;
             window.jQuery(element).typeahead('destroy');
         }
         BlazorTypeahead.destroy = destroy;
+        function update(element, text, focus, selectionStart, selectionEnd) {
+            if (element) {
+                if (text !== null && text !== undefined) {
+                    element.value = text;
+                }
+                if (focus) {
+                    element.focus();
+                }
+                if (selectionStart !== null && selectionStart !== undefined
+                    && selectionEnd !== null && selectionEnd !== undefined) {
+                    element.setSelectionRange(selectionStart, selectionEnd);
+                }
+            }
+        }
+        BlazorTypeahead.update = update;
     })(BlazorTypeahead = Shipwreck.BlazorTypeahead || (Shipwreck.BlazorTypeahead = {}));
 })(Shipwreck || (Shipwreck = {}));

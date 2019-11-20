@@ -145,5 +145,24 @@ namespace Shipwreck.BlazorTypeahead
             }
             return default;
         }
+
+        #region UpdateElementAsync
+
+        public ValueTask SetTextAsync(string text)
+            => UpdateElementAsync(text: text ?? string.Empty);
+
+        public ValueTask FocusAsync()
+            => UpdateElementAsync(focus: true);
+
+        public ValueTask SetSelectionRangeAsync(int start, int end)
+            => UpdateElementAsync(selectionStart: start, selectionEnd: end);
+
+        public ValueTask SelectAsync()
+            => UpdateElementAsync(selectionStart: 0, selectionEnd: int.MaxValue);
+
+        public ValueTask UpdateElementAsync(string text = null, bool focus = false, int? selectionStart = null, int? selectionEnd = null)
+              => _Runtime.InvokeVoidAsync("Shipwreck.BlazorTypeahead.update", _Element, text, focus, selectionStart, selectionEnd);
+
+        #endregion UpdateElementAsync
     }
 }
