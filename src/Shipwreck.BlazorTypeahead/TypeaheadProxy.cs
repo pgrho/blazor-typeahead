@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Newtonsoft.Json;
 
 namespace Shipwreck.BlazorTypeahead
 {
@@ -25,13 +27,8 @@ namespace Shipwreck.BlazorTypeahead
 
         private class ItemCache : IItem
         {
-            [JsonProperty("name")]
             public string Html { get; set; }
-
-            [JsonProperty("hashCode")]
             public int HashCode => GetHashCode();
-
-            [JsonIgnore]
             public T Value { get; set; }
         }
 
@@ -95,31 +92,66 @@ namespace Shipwreck.BlazorTypeahead
         {
             Typeahead.Register(this);
 
+            string json;
+            using (var ms = new MemoryStream())
+            using (var jw = new Utf8JsonWriter(ms))
+            {
+                jw.WriteStartObject();
+
+                if (_Source != null)
+                {
+                    jw.WritePropertyName("source");
+                    jw.WriteStartArray();
+                    foreach (var e in CacheItems(_Source))
+                    {
+                        jw.WriteStartObject();
+
+                        jw.WriteString("name", e.Html);
+
+                        jw.WriteNumber("hashCode", e.HashCode);
+
+                        jw.WriteEndObject();
+                    }
+                    jw.WriteEndArray();
+                }
+
+                jw.WriteBoolean("sourceCallback", _SourceCallback != null);
+                jw.WriteNumber("items", _Items);
+                jw.WriteNumber("minLength", _MinLength);
+
+                switch (_ShowHintOnFocus)
+                {
+                    case HintBehavior.Disabled:
+                    case HintBehavior.Enabled:
+                        jw.WriteBoolean("showHintOnFocus", _ShowHintOnFocus == HintBehavior.Enabled);
+                        break;
+
+                    case HintBehavior.All:
+                        jw.WriteString("showHintOnFocus", "all");
+                        break;
+                }
+
+                jw.WriteNumber("scrollHeight", _ScrollHeight);
+                jw.WriteBoolean("autoSelect", _AutoSelect);
+                jw.WriteNumber("delay", _Delay);
+                jw.WriteBoolean("fitToElement", _FitToElement);
+                jw.WriteBoolean("changeInputOnSelect", _ChangeInputOnSelect);
+                jw.WriteBoolean("changeInputOnMove", _ChangeInputOnMove);
+                jw.WriteBoolean("openLinkInNewTab", _OpenLinkInNewTab);
+                jw.WriteBoolean("selectOnBlur", _SelectOnBlur);
+                jw.WriteBoolean("showCategoryHeader", _ShowCategoryHeader);
+
+                jw.WriteEndObject();
+                jw.Flush();
+
+                json = Encoding.UTF8.GetString(ms.ToArray());
+            }
+
             return _Runtime.InvokeVoidAsync(
                 "Shipwreck.BlazorTypeahead.initialize",
                 _Element,
                 GetHashCode(),
-                JsonConvert.SerializeObject(new
-                {
-                    source = CacheItems(_Source),
-                    sourceCallback = _SourceCallback != null,
-                    items = _Items,
-                    minLength = _MinLength,
-                    showHintOnFocus = _ShowHintOnFocus == HintBehavior.Disabled ? false
-                                    : _ShowHintOnFocus == HintBehavior.Enabled ? true
-                                    : _ShowHintOnFocus == HintBehavior.All ? "all"
-                                    : (object)null,
-                    scrollHeight = _ScrollHeight,
-                    autoSelect = _AutoSelect,
-                    //AfterSelect;
-                    delay = _Delay,
-                    fitToElement = _FitToElement,
-                    changeInputOnSelect = _ChangeInputOnSelect,
-                    changeInputOnMove = _ChangeInputOnMove,
-                    openLinkInNewTab = _OpenLinkInNewTab,
-                    selectOnBlur = _SelectOnBlur,
-                    showCategoryHeader = _ShowCategoryHeader,
-                }));
+                json);
         }
 
         async ValueTask<IEnumerable<IItem>> ITypeaheadProxy.QueryAsync(string text, int selectionStart, int selectionEnd)

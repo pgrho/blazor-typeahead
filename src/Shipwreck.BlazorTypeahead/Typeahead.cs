@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.IO;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Newtonsoft.Json;
 
 namespace Shipwreck.BlazorTypeahead
 {
@@ -51,11 +52,26 @@ namespace Shipwreck.BlazorTypeahead
 
             var items = await proxy.QueryAsync(text, selectionStart, selectionEnd).ConfigureAwait(false);
 
-            return JsonConvert.SerializeObject(items.Select(e => new
+            using (var ms = new MemoryStream())
+            using (var jw = new Utf8JsonWriter(ms))
             {
-                name = e.Html,
-                hashCode = e.HashCode
-            }));
+                jw.WriteStartArray();
+                foreach (var e in items)
+                {
+                    jw.WriteStartObject();
+
+                    jw.WriteString("name", e.Html);
+
+                    jw.WriteNumber("hashCode", e.HashCode);
+
+                    jw.WriteEndObject();
+                }
+                jw.WriteEndArray();
+
+                jw.Flush();
+
+                return Encoding.UTF8.GetString(ms.ToArray());
+            }
         }
 
         [JSInvokable]
