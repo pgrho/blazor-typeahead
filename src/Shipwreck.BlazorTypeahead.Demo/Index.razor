@@ -5,11 +5,112 @@
         <div class="custom-control custom-checkbox">
             <input type="checkbox"
                    class="custom-control-input"
-                   id="RemoteSource"
-                   @bind="@RemoteSource">
+                   id="RemoteSourceBack"
+                   @bind="@RemoteSourceBack">
             <label class="custom-control-label"
-                   for="RemoteSource">
+                   for="RemoteSourceBack">
                 Use SourceCallback
+            </label>
+        </div>
+
+        <label for="SourceCallbackWait">Wait (ms)</label>
+        <input type="number"
+               class="form-control"
+               id="SourceCallbackWait"
+               disabled="@(RemoteSourceBack ? null : "disabled")"
+               @bind="@SourceCallbackWait">
+    </div>
+    <div class="form-inline">
+        <label for="Items">Items</label>
+        <input type="number"
+               class="form-control"
+               id="Items"
+               @bind="@Items">
+        <label for="MinLength">MinLength</label>
+        <input type="number"
+               class="form-control"
+               id="MinLength"
+               @bind="@MinLength">
+        <label for="ScrollHeight">ScrollHeight</label>
+        <input type="number"
+               class="form-control"
+               id="ScrollHeight"
+               @bind="@ScrollHeight">
+        <label for="Delay">Delay</label>
+        <input type="number"
+               class="form-control"
+               id="Delay"
+               @bind="@Delay">
+    </div>
+    <div class="form-inline">
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="AutoSelect"
+                   @bind="@AutoSelect">
+            <label class="custom-control-label"
+                   for="AutoSelect">
+                AutoSelect
+            </label>
+        </div>
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="FitToElement"
+                   @bind="@FitToElement">
+            <label class="custom-control-label"
+                   for="FitToElement">
+                FitToElement
+            </label>
+        </div>
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="ChangeInputOnSelect"
+                   @bind="@ChangeInputOnSelect">
+            <label class="custom-control-label"
+                   for="ChangeInputOnSelect">
+                ChangeInputOnSelect
+            </label>
+        </div>
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="ChangeInputOnMove"
+                   @bind="@ChangeInputOnMove">
+            <label class="custom-control-label"
+                   for="ChangeInputOnMove">
+                ChangeInputOnMove
+            </label>
+        </div>
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="OpenLinkInNewTab"
+                   @bind="@OpenLinkInNewTab">
+            <label class="custom-control-label"
+                   for="OpenLinkInNewTab">
+                OpenLinkInNewTab
+            </label>
+        </div>
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="SelectOnBlur"
+                   @bind="@SelectOnBlur">
+            <label class="custom-control-label"
+                   for="SelectOnBlur">
+                SelectOnBlur
+            </label>
+        </div>
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="ShowCategoryHeader"
+                   @bind="@ShowCategoryHeader">
+            <label class="custom-control-label"
+                   for="ShowCategoryHeader">
+                ShowCategoryHeader
             </label>
         </div>
     </div>
@@ -27,6 +128,11 @@
                     @onclick="@Destroy">
                 Destroy
             </button>
+
+            if (IsInSourceCallback)
+            {
+                <span>Executing SourceCallback..</span>
+            }
         }
     </div>
     <div class="mt-4">
@@ -40,35 +146,70 @@
 
 @code
 {
+    [Inject]
+    public IJSRuntime JS { get; set; }
+
     ElementReference element;
     string query;
     private TypeaheadProxy<StateInfo> _Proxy;
 
-    public bool RemoteSource = true;
+    public bool RemoteSourceBack = true;
+    public int SourceCallbackWait = 500;
+    public bool IsInSourceCallback;
 
-    [Inject]
-    public IJSRuntime JS { get; set; }
+    public int Items = 8;
+    public int MinLength = 1;
+    public HintBehavior ShowHintOnFocus;
+    public int ScrollHeight;
+    public bool AutoSelect = true;
+    public int Delay;
+    public bool FitToElement;
+    public bool ChangeInputOnSelect = true;
+    public bool ChangeInputOnMove = true;
+    public bool OpenLinkInNewTab;
+    public bool SelectOnBlur = true;
+    public bool ShowCategoryHeader = true;
+
 
     async void Initialize()
     {
         var ops = new TypeaheadOptions<StateInfo>
         {
+            Items = Items,
+            MinLength = MinLength,
+            ScrollHeight = ScrollHeight,
+            Delay = Delay,
+            AutoSelect = AutoSelect,
+            FitToElement = FitToElement,
+            ChangeInputOnSelect = ChangeInputOnSelect,
+            ChangeInputOnMove = ChangeInputOnMove,
+            OpenLinkInNewTab = OpenLinkInNewTab,
+            SelectOnBlur = SelectOnBlur,
+            ShowCategoryHeader = ShowCategoryHeader,
             Highlighter = (s, q) => $"<span class='text-light bg-dark mr-2'>{s.Postal}</span>{s.Name}",
             DisplayText = s => s.Name,
             AfterSelect = (s) => _Proxy.UpdateElementAsync(text: s.Name + " (AfterSelect)", selectionStart: 0, selectionEnd: int.MaxValue),
         };
 
-        if (RemoteSource)
+        if (RemoteSourceBack)
         {
             ops.SourceCallback = (t, ss, se) =>
             {
+                IsInSourceCallback = true;
+                StateHasChanged();
+
                 Console.WriteLine("SourceCallback: {0}, {1}, {2}", t, ss, se);
                 var lq = (t ?? string.Empty).Trim().ToLower();
-                return Task.Delay(500)
-                        .ContinueWith(t => (IList<StateInfo>)StateInfo.All
-                                            .Where(e => lq.Length == 0
-                                                || e.Name.ToLower().IndexOf(lq) >= 0)
-                                            .ToList());
+                return Task.Delay(SourceCallbackWait)
+                .ContinueWith(t =>
+                {
+                    IsInSourceCallback = false;
+                    StateHasChanged();
+
+                    return (IList<StateInfo>)StateInfo.All
+                                .Where(e => lq.Length == 0 || e.Name.ToLower().IndexOf(lq) >= 0)
+                                .ToList();
+                });
             };
         }
         else
