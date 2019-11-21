@@ -23,7 +23,7 @@ namespace Shipwreck.BlazorTypeahead
             public ItemCache[] Items { get; }
         }
 
-        private class ItemCache
+        private class ItemCache : IItem
         {
             [JsonProperty("name")]
             public string Html { get; set; }
@@ -44,7 +44,7 @@ namespace Shipwreck.BlazorTypeahead
         #region Options
 
         private readonly T[] _Source;
-        private readonly Func<string, Task<IList<T>>> _SourceCallback;
+        private readonly TypeaheadSourceCallback<T> _SourceCallback;
         private readonly int _Items;
         private readonly int _MinLength;
         private readonly HintBehavior _ShowHintOnFocus;
@@ -120,6 +120,24 @@ namespace Shipwreck.BlazorTypeahead
                     selectOnBlur = _SelectOnBlur,
                     showCategoryHeader = _ShowCategoryHeader,
                 }));
+        }
+
+        async ValueTask<IEnumerable<IItem>> ITypeaheadProxy.QueryAsync(string text, int selectionStart, int selectionEnd)
+        {
+            if (_Source != null)
+            {
+                lock (_History)
+                {
+                    return _History.LastOrDefault()?.Items ?? CacheItems(_Source);
+                }
+            }
+            if (_SourceCallback != null)
+            {
+                var items = await _SourceCallback(text, selectionStart, selectionEnd).ConfigureAwait(false);
+                return CacheItems(items);
+            }
+
+            return Enumerable.Empty<IItem>();
         }
 
         #region Items

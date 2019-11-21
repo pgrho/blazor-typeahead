@@ -4,11 +4,12 @@ using System.Threading.Tasks;
 
 namespace Shipwreck.BlazorTypeahead
 {
+    public delegate Task<IList<T>> TypeaheadSourceCallback<T>(string text, int selectionStart, int selectionEnd);
     public class TypeaheadOptions<T>
     {
         public IList<T> Source { get; set; }
 
-        public Func<string, Task<IList<T>>> SourceCallback { get; set; }
+        public TypeaheadSourceCallback<T> SourceCallback { get; set; }
 
         public int Items { get; set; } = 8;
 

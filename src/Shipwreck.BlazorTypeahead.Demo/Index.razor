@@ -1,7 +1,18 @@
 ﻿@page "/"
 @inherits LayoutComponentBase
-
 <div class="container">
+    <div class="form-inline">
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox"
+                   class="custom-control-input"
+                   id="RemoteSource"
+                   @bind="@RemoteSource">
+            <label class="custom-control-label"
+                   for="RemoteSource">
+                Use SourceCallback
+            </label>
+        </div>
+    </div>
     <div>
         @if (_Proxy == null)
         {
@@ -31,20 +42,39 @@
 {
     ElementReference element;
     string query;
-    private TypeaheadProxy<State> _Proxy;
+    private TypeaheadProxy<StateInfo> _Proxy;
+
+    public bool RemoteSource = true;
 
     [Inject]
     public IJSRuntime JS { get; set; }
 
     async void Initialize()
     {
-        var ops = new TypeaheadOptions<State>
+        var ops = new TypeaheadOptions<StateInfo>
         {
-            Source = State.All,
             Highlighter = (s, q) => $"<span class='text-light bg-dark mr-2'>{s.Postal}</span>{s.Name}",
             DisplayText = s => s.Name,
             AfterSelect = (s) => _Proxy.UpdateElementAsync(text: s.Name + " (AfterSelect)", selectionStart: 0, selectionEnd: int.MaxValue),
         };
+
+        if (RemoteSource)
+        {
+            ops.SourceCallback = (t, ss, se) =>
+            {
+                Console.WriteLine("SourceCallback: {0}, {1}, {2}", t, ss, se);
+                var lq = (t ?? string.Empty).Trim().ToLower();
+                return Task.Delay(500)
+                        .ContinueWith(t => (IList<StateInfo>)StateInfo.All
+                                            .Where(e => lq.Length == 0
+                                                || e.Name.ToLower().IndexOf(lq) >= 0)
+                                            .ToList());
+            };
+        }
+        else
+        {
+            ops.Source = StateInfo.All;
+        }
 
         _Proxy = await JS.TypeaheadAsync(element, ops);
         await _Proxy.FocusAsync();
@@ -57,70 +87,5 @@
         _Proxy?.DestroyAsync();
         _Proxy = null;
         StateHasChanged();
-    }
-
-    public class State
-    {
-        public State(string name, string postal)
-        {
-            Name = name;
-            Postal = postal;
-        }
-        public string Name { get; }
-        public string Postal { get; }
-
-        public static readonly State[] All =
-        {
-            new State("Alabama", "AL"),
-            new State("Alaska", "AK"),
-            new State("Arizona", "AZ"),
-            new State("Arkansas", "AR"),
-            new State("California", "CA"),
-            new State("Colorado", "CO"),
-            new State("Connecticut", "CT"),
-            new State("Delaware", "DE"),
-            new State("Florida", "FL"),
-            new State("Georgia", "GA"),
-            new State("Hawaii", "HI"),
-            new State("Idaho", "ID"),
-            new State("Illinois", "IL"),
-            new State("Indiana", "IN"),
-            new State("Iowa", "IA"),
-            new State("Kansas", "KS"),
-            new State("Kentucky", "KY"),
-            new State("Louisiana", "LA"),
-            new State("Maine", "ME"),
-            new State("Maryland", "MD"),
-            new State("Massachusetts", "MA"),
-            new State("Michigan", "MI"),
-            new State("Minnesota", "MN"),
-            new State("Mississippi", "MS"),
-            new State("Missouri", "MO"),
-            new State("Montana", "MT"),
-            new State("Nebraska", "NE"),
-            new State("Nevada", "NV"),
-            new State("New Hampshire", "NH"),
-            new State("New Jersey", "NJ"),
-            new State("New Mexico", "NM"),
-            new State("New York", "NY"),
-            new State("North Carolina", "NC"),
-            new State("North Dakota", "ND"),
-            new State("Ohio", "OH"),
-            new State("Oklahoma", "OK"),
-            new State("Oregon", "OR"),
-            new State("Pennsylvania", "PA"),
-            new State("Rhode Island", "RI"),
-            new State("South Carolina", "SC"),
-            new State("South Dakota", "SD"),
-            new State("Tennessee", "TN"),
-            new State("Texas", "TX"),
-            new State("Utah", "UT"),
-            new State("Vermont", "VT"),
-            new State("Virginia", "VA"),
-            new State("Washington", "WA"),
-            new State("West Virginia", "WV"),
-            new State("Wisconsin", "WI"),
-            new State("Wyoming", "WY"),
-        };
     }
 }

@@ -31,7 +31,10 @@ var Shipwreck;
                 ops.source = options.source;
             }
             else {
-                // invoke remote _SourceCallback
+                ops.source = function (query, process) {
+                    DotNet.invokeMethodAsync("Shipwreck.BlazorTypeahead", "GetJsonItemsAsync", hashCode, element.value, element.selectionStart, element.selectionEnd)
+                        .then(function (json) { return process(JSON.parse(json)); });
+                };
             }
             window.jQuery(element).typeahead(ops);
         }
