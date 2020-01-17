@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,12 +8,10 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace Shipwreck.BlazorTypeahead
 {
-    public class TypeaheadProxy<T> : ITypeaheadProxy, IDisposable
+    public class TypeaheadProxy<T> : IDisposable
     {
         private class ItemList
         {
@@ -25,7 +25,7 @@ namespace Shipwreck.BlazorTypeahead
             public ItemCache[] Items { get; }
         }
 
-        private class ItemCache : IItem
+        private class ItemCache
         {
             public string Html { get; set; }
             public int HashCode => GetHashCode();
@@ -90,8 +90,6 @@ namespace Shipwreck.BlazorTypeahead
 
         public ValueTask InitializeAsync()
         {
-            Typeahead.Register(this);
-
             string json;
             using (var ms = new MemoryStream())
             using (var jw = new Utf8JsonWriter(ms))
@@ -150,26 +148,8 @@ namespace Shipwreck.BlazorTypeahead
             return _Runtime.InvokeVoidAsync(
                 "Shipwreck.BlazorTypeahead.initialize",
                 _Element,
-                GetHashCode(),
+                DotNetObjectReference.Create(this),
                 json);
-        }
-
-        async ValueTask<IEnumerable<IItem>> ITypeaheadProxy.QueryAsync(string text, int selectionStart, int selectionEnd)
-        {
-            if (_Source != null)
-            {
-                lock (_History)
-                {
-                    return _History.LastOrDefault()?.Items ?? CacheItems(_Source);
-                }
-            }
-            if (_SourceCallback != null)
-            {
-                var items = await _SourceCallback(text, selectionStart, selectionEnd).ConfigureAwait(false);
-                return CacheItems(items);
-            }
-
-            return Enumerable.Empty<IItem>();
         }
 
         #region Items
@@ -233,49 +213,10 @@ namespace Shipwreck.BlazorTypeahead
 
         public string GetItemText(T item) => _DisplayText?.Invoke(item) ?? item?.ToString() ?? string.Empty;
 
-        void ITypeaheadProxy.AfterSelect(int itemHashCode)
-        {
-            ItemCache selected = null;
-            lock (_History)
-            {
-                for (var i = _History.Count - 1; i >= 0; i--)
-                {
-                    var l = _History[i];
-                    foreach (var e in l.Items)
-                    {
-                        if (e.HashCode == itemHashCode)
-                        {
-                            selected = e;
-                            i = 0;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (selected != null)
-            {
-                if (_AfterSelect != null)
-                {
-                    _AfterSelect(selected.Value);
-                }
-                else
-                {
-                    UpdateElementAsync(text: GetItemText(selected.Value), selectionStart: int.MaxValue, selectionEnd: int.MaxValue);
-                }
-            }
-        }
-
         #endregion Items
 
         public ValueTask DestroyAsync()
-        {
-            if (Typeahead.Unregister(this))
-            {
-                return _Runtime.InvokeVoidAsync("Shipwreck.BlazorTypeahead.destroy", _Element);
-            }
-            return default;
-        }
+            => _Runtime.InvokeVoidAsync("Shipwreck.BlazorTypeahead.destroy", _Element);
 
         #region UpdateElementAsync
 
@@ -325,5 +266,84 @@ namespace Shipwreck.BlazorTypeahead
         }
 
         #endregion IDisposable
+
+        [JSInvokable]
+        public async Task<string> GetJsonItemsAsync(string text, int selectionStart, int selectionEnd)
+        {
+            var items = await QueryAsync(text, selectionStart, selectionEnd).ConfigureAwait(false);
+
+            using (var ms = new MemoryStream())
+            using (var jw = new Utf8JsonWriter(ms))
+            {
+                jw.WriteStartArray();
+                foreach (var e in items)
+                {
+                    jw.WriteStartObject();
+
+                    jw.WriteString("name", e.Html);
+
+                    jw.WriteNumber("hashCode", e.HashCode);
+
+                    jw.WriteEndObject();
+                }
+                jw.WriteEndArray();
+
+                jw.Flush();
+
+                return Encoding.UTF8.GetString(ms.ToArray());
+            }
+        }
+
+        private async ValueTask<IEnumerable<ItemCache>> QueryAsync(string text, int selectionStart, int selectionEnd)
+        {
+            if (_Source != null)
+            {
+                lock (_History)
+                {
+                    return _History.LastOrDefault()?.Items ?? CacheItems(_Source);
+                }
+            }
+            if (_SourceCallback != null)
+            {
+                var items = await _SourceCallback(text, selectionStart, selectionEnd).ConfigureAwait(false);
+                return CacheItems(items);
+            }
+
+            return Enumerable.Empty<ItemCache>();
+        }
+
+        [JSInvokable]
+        public void OnItemSelected(int itemHashCode)
+        {
+            ItemCache selected = null;
+            lock (_History)
+            {
+                for (var i = _History.Count - 1; i >= 0; i--)
+                {
+                    var l = _History[i];
+                    foreach (var e in l.Items)
+                    {
+                        if (e.HashCode == itemHashCode)
+                        {
+                            selected = e;
+                            i = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (selected != null)
+            {
+                if (_AfterSelect != null)
+                {
+                    _AfterSelect(selected.Value);
+                }
+                else
+                {
+                    UpdateElementAsync(text: GetItemText(selected.Value), selectionStart: int.MaxValue, selectionEnd: int.MaxValue);
+                }
+            }
+        }
     }
 }

@@ -340,5 +340,6 @@ ASALocalRun/
 healthchecksdb
 /src/Shipwreck.BlazorTypeahead.Demo/wwwroot/css/**
 /src/Shipwreck.BlazorTypeahead.Demo/wwwroot/js/**
-/src/Shipwreck.BlazorTypeahead/scripts/*.ts
+/src/Shipwreck.BlazorTypeahead/scripts/*.js
+/src/Shipwreck.BlazorTypeahead/scripts/*.js.map
 /src/Shipwreck.BlazorTypeahead/content/*
