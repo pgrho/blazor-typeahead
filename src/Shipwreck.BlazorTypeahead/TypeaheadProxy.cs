@@ -52,6 +52,8 @@ namespace Shipwreck.BlazorTypeahead
         private readonly bool _AutoSelect;
         private readonly Action<T> _AfterSelect;
         private readonly int _Delay;
+        private readonly string _AppendToSelector;
+        private readonly ElementReference _AppendTo;
         private readonly bool _FitToElement;
         private readonly bool _ChangeInputOnSelect;
         private readonly bool _ChangeInputOnMove;
@@ -132,6 +134,7 @@ namespace Shipwreck.BlazorTypeahead
                 jw.WriteNumber("scrollHeight", _ScrollHeight);
                 jw.WriteBoolean("autoSelect", _AutoSelect);
                 jw.WriteNumber("delay", _Delay);
+                jw.WriteString("appendTo", _AppendToSelector);
                 jw.WriteBoolean("fitToElement", _FitToElement);
                 jw.WriteBoolean("changeInputOnSelect", _ChangeInputOnSelect);
                 jw.WriteBoolean("changeInputOnMove", _ChangeInputOnMove);
@@ -149,6 +152,7 @@ namespace Shipwreck.BlazorTypeahead
                 "Shipwreck.BlazorTypeahead.initialize",
                 _Element,
                 DotNetObjectReference.Create(this),
+                _AppendTo.Id == null ? null : (object)_AppendTo,
                 json);
         }
 

@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Components;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Shipwreck.BlazorTypeahead
 {
     public delegate Task<IList<T>> TypeaheadSourceCallback<T>(string text, int selectionStart, int selectionEnd);
+
     public class TypeaheadOptions<T>
     {
         public IList<T> Source { get; set; }
@@ -34,7 +36,8 @@ namespace Shipwreck.BlazorTypeahead
         public Action<T> AfterSelect { get; set; }
         public int Delay { get; set; }
 
-        // public ElementReference AppendTo { get; set; }
+        public string AppendToSelector { get; set; }
+        public ElementReference AppendTo { get; set; }
 
         public bool FitToElement { get; set; }
 

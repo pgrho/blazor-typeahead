@@ -1,7 +1,7 @@
 /// <reference path="../node_modules/@dotnet/jsinterop/dist/Microsoft.JSInterop.d.ts" />
 /// <reference path="../node_modules/@types/jquery/index.d.ts" />
 namespace Shipwreck.BlazorTypeahead {
-    export function initialize(element: HTMLInputElement, obj, optionsJson: string) {
+    export function initialize(element: HTMLInputElement, obj, appendTo: Element, optionsJson: string) {
         var options = JSON.parse(optionsJson);
         var ops = {
             source: undefined,
@@ -18,6 +18,7 @@ namespace Shipwreck.BlazorTypeahead {
             },
             autoSelect: options.autoSelect,
             delay: options.delay,
+            appendTo: appendTo || (options.appendTo ? jQuery(options.appendTo) : null),
             fitToElement: options.fitToElement,
             changeInputOnSelect: options.changeInputOnSelect,
             changeInputOnMove: options.changeInputOnMove,
@@ -34,10 +35,10 @@ namespace Shipwreck.BlazorTypeahead {
                     .then(function (json) { return process(JSON.parse(json)); });
             };
         }
-        (<any>$)(element).typeahead(ops);
+        (<any>jQuery)(element).typeahead(ops);
     }
     export function destroy(element) {
-        (<any>$)(element).typeahead('destroy');
+        (<any>jQuery)(element).typeahead('destroy');
     }
     export function update(element, text, focus, selectionStart, selectionEnd) {
         if (element) {
