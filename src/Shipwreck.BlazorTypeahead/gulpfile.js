@@ -6,7 +6,7 @@ var del = require('del');
 var ts = require('gulp-typescript');
 
 gulp.task('clean', function () {
-    return del(['content/*.js']);
+    return del(['wwwroot/*.js']);
 });
 gulp.task('tsc', function () {
     return gulp.src(['scripts/Shim.ts']).pipe(ts({
@@ -18,12 +18,12 @@ gulp.task('scripts', function () {
         'node_modules/bootstrap-3-typeahead/bootstrap3-typeahead.min.js',
         'Scripts/Shim.js'
     ])
-        .pipe(concat('bundle.js'))
+        .pipe(concat('Shipwreck.BlazorTypeahead.js'))
         .pipe(uglify({
             output: {
                 comments: /^!/
             }
         }))
-        .pipe(gulp.dest('content/'));
+        .pipe(gulp.dest('wwwroot/'));
 });
 gulp.task('default', gulp.series(['clean', 'tsc', 'scripts']));

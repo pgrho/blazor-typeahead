@@ -5,7 +5,8 @@ Blazor wrapper for [Bootstrap 3 Typeahead](https://github.com/bassjobsen/Bootstr
 ## Usage
 
 1. Reference [Shipwreck.BlazorTypeahead](https://www.nuget.org/packages/Shipwreck.BlazorTypeahead/) from nuget.org
-2. Add `<script>` references for jQuery and Bootstrap 3 or later in your Blazor HTML. (Bootstrap 3 Typeahead is embedded in the package.)
+2. Reference `Shipwreck.BlazorTypeahead.js` inside `Shipwreck.BlazorTypeahead` contents.
+3. Add `<script>` references for jQuery and Bootstrap 3 or later in your Blazor HTML. (Bootstrap 3 Typeahead is embedded in the package.)
 
 ```csharp
 // using Shipwreck.BlazorTypeahead;

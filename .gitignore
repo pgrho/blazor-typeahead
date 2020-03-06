@@ -343,3 +343,4 @@ healthchecksdb
 /src/Shipwreck.BlazorTypeahead/scripts/*.js
 /src/Shipwreck.BlazorTypeahead/scripts/*.js.map
 /src/Shipwreck.BlazorTypeahead/content/*
+/src/Shipwreck.BlazorTypeahead/wwwroot/Shipwreck.BlazorTypeahead.js
