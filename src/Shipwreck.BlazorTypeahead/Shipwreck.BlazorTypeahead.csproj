@@ -4,16 +4,15 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
-    <LangVersion>7.3</LangVersion>
     <RazorLangVersion>3.0</RazorLangVersion>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pgrho/blazor-typeahead</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pgrho/blazor-typeahead</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="3.2.0-preview1.20073.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="3.2.0-preview1.20073.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.0-preview3.20168.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +25,7 @@
   <ItemGroup>
     <None Remove="scripts\*" />
     <None Include="scripts\Shim.js" Pack="False" />
-    <None Include="scripts\Shim.js.map" Pack="False" /> 
+    <None Include="scripts\Shim.js.map" Pack="False" />
     <None Include="scripts\Shim.ts">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>

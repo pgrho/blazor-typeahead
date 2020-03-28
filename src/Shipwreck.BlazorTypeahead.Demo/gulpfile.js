@@ -13,9 +13,4 @@ gulp.task('bootstrap', function () {
     return gulp.src(['node_modules/bootstrap/dist/**/*'])
         .pipe(gulp.dest('wwwroot'));
 });
-gulp.task('bundle', function () {
-    return gulp.src([
-        '../Shipwreck.BlazorTypeahead/wwwroot/Shipwreck.BlazorTypeahead.js'
-    ]).pipe(gulp.dest('wwwroot/js/'));
-});
-gulp.task('default', gulp.series(['clean', 'jquery', 'bootstrap', 'bundle']));
+gulp.task('default', gulp.series(['clean', 'jquery', 'bootstrap']));
