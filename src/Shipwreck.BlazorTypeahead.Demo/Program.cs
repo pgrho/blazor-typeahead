@@ -10,7 +10,8 @@ namespace Shipwreck.BlazorTypeahead.Demo
     {
         public static Task Main(string[] args)
         {
-            var builder = WebAssemblyHostBuilder.CreateDefault(args);
+            var builder = WebAssemblyHostBuilder.CreateDefault(args); 
+            builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.RootComponents.Add<App>("app");
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });

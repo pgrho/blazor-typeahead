@@ -79,6 +79,8 @@ namespace Shipwreck.BlazorTypeahead
             _AutoSelect = options.AutoSelect;
             _AfterSelect = options.AfterSelect;
             _Delay = options.Delay;
+            _AppendTo = options.AppendTo;
+            _AppendToSelector = options.AppendToSelector;
             _FitToElement = options.FitToElement;
             _ChangeInputOnSelect = options.ChangeInputOnSelect;
             _ChangeInputOnMove = options.ChangeInputOnMove;
